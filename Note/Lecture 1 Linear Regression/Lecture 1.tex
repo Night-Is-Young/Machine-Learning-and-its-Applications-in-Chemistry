@@ -1,0 +1,17 @@
+\documentclass{ctexart}
+\usepackage{template}
+\begin{document}
+\section{线性回归}
+\subsection{单变量线性拟合}
+\subsubsection{机器学习的一般过程}
+\subsubsection{误差函数与线性回归}
+定义\tbf{误差函数(Error Function)}(或称\tbf{代价函数(Cost Function)})衡量预测值与实际值之间的差距.机器学习中常用的误差函数为\tbf{平方和误差函数(Sum-of-Square Error Function)},即\tbf{二乘误差函数}:
+\[E(\mbf{w})=\dfrac12\sum_{i=1}^{N}\left(f(x_i;\mbf w)-t_i\right)^2\]
+其中$\mbf{w}$为\tbf{权重矢量(Wight Vector)},是拟合多项式的参数构成的矢量.例如,多项式拟合的$\mbf w=\left(w_0,\cdots,w_M\right)$表明拟合函数$f$为
+\[f(x;\mbf w)=w_0+w_1x+\cdots+w_Mx^M=\sum_{j=0}^{M}w_jx^j\]
+各$x_i$为
+容易看出这与统计学中最小二乘法的关系.\\
+考虑测试数据$(x_1,y_1),\cdots,(x_n,y_n)$,使用一次函数模型$y=f(x)=ax+b$进行拟合.
+\subsubsection{过拟合,维度灾难与正则化}
+
+\end{document}

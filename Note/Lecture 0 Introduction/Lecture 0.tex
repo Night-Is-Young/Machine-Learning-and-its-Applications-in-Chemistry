@@ -1,0 +1,48 @@
+\documentclass{ctexart}
+\usepackage{Note}
+\begin{document}
+\setcounter{FormalCounter}{0}
+\section{机器学习}
+\subsection{机器学习的定义}
+通俗而言,机器学习是告诉机器一些已知的信息,机器通过一定方式寻找其内在的规律,然后对另一些未知的情形给出预测的过程.严格一些的定义可以参考如下:
+\begin{definition}[机器学习的定义]
+    这里给出两种比较通用的定义.
+    \begin{enumerate}[label=\tbf{\arabic*.},topsep=0pt,parsep=0pt,itemsep=0pt,partopsep=0pt]
+        \item Herbert Simon的定义: 如果一个系统,能够通过执行某个过程,就此改进了它的性能,那么这个过程就是学习.
+        \item Tom Mitchell的定义: A computer program is said to learn from experience \tbf{E} with respect to some task \tbf{T} and some performance measure \tbf{P}, if its performance on \tbf{T}, as measured by \tbf{P}, improves with experience \tbf{E}.
+    \end{enumerate}
+\end{definition}
+适合用机器学习去解决的问题,一般满足如下条件:有内在规律可以学习;规律复杂,很难通过解析或穷举的方法列清楚规则;有足够多能够学习到规律的数据.它尤其适用于那种机制不清(如图像识别),或者机制清但计算量太大(如围棋,量子力学计算),能够接受近似(误差)以换取速度的问题.
+\subsection{机器学习的分类}
+机器学习大致可以分成三大类: \tbf{监督学习(supervised learning)}, \tbf{无监督学习(unsupervised learning)}, \tbf{强化学习(reinforcement learning)}.我们现在分别给出其定义和示例.
+\subsubsection{监督学习}
+\begin{definition}[监督学习]
+    监督学习是根据已经标注的数据集建立模型(或函数),并以此模式推测新的实例的学习过程.
+\end{definition}
+\begin{notation}[数据集]
+    通常将监督学习的数据集记作$\{\mbf{x}_n,y_n\}(n=1,\cdots,N)$,其中输入量$\mbf{x}_i$是具有$d$个维度的矢量,即
+    \[\mbf{x}_i=\begin{bmatrix}
+        x_{i1}\\\vdots\\x_{id}
+    \end{bmatrix}\]
+    $y_i$则为$\mbf{x}_i$对应的输出量.输出有时也是一个向量,此时也应当采取相应的表示.
+\end{notation}
+根据数据输出的不同,可以将监督学习分成两类: \tbf{回归(Regression)}, \tbf{分类(Classification)}.
+\begin{definition}[回归]
+    如果数据集的输出$y$是连续的,那么这一监督学习被称作\tbf{回归}.
+\end{definition}
+回归的典型例子就是直线或曲线的拟合.在下一讲中就主要讨论线性回归.
+\begin{definition}[分类]
+    如果数据集的输出$y$是离散的,那么这一监督学习被称作\tbf{分类}.
+\end{definition}
+分类的典型例子就是数字的识别.\\
+\indent 为了让机器能正确分析并处理样本,我们需要将样本的性质进行量化,即\tbf{特征}.
+\begin{definition}[特征]
+    特征是样本在特征空间中的坐标分量,是输入向量的基本组成部分,每个特征对应样本的一项可观测或可计算的属性.
+\end{definition}
+例如,在预测反应的选择性时,样本为反应体系,特征则为底物的取代基,溶剂,温度,反应时间等数据.不同特征在模型中可能具有不同的重要性;特征的质量和选择往往决定模型性能的上限.
+\subsubsection{无监督学习}
+\begin{definition}[无监督学习]
+    无监督学习是给定未标记的数据集$\{\mbf x_n\}$,建立描述其内在关系的模型的学习过程.
+\end{definition}
+无监督学习的常见例子包括聚类分析,关联规则等.
+\end{document}
