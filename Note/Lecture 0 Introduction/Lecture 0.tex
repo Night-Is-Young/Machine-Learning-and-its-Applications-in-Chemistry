@@ -2,7 +2,7 @@
 \usepackage{Note}
 \begin{document}
 \setcounter{FormalCounter}{0}
-\section{机器学习}
+\section{机器学习引论}
 \subsection{机器学习的定义}
 通俗而言,机器学习是告诉机器一些已知的信息,机器通过一定方式寻找其内在的规律,然后对另一些未知的情形给出预测的过程.严格一些的定义可以参考如下:
 \begin{definition}[机器学习的定义]
@@ -45,4 +45,18 @@
     无监督学习是给定未标记的数据集$\{\mbf x_n\}$,建立描述其内在关系的模型的学习过程.
 \end{definition}
 无监督学习的常见例子包括聚类分析,关联规则等.
+\subsubsection{强化学习}
+\begin{definition}[强化学习]
+    强化学习是让智能体通过与环境交互,根据奖励反馈不断调整行为策略,以最大化长期累计奖励的学习方法.
+\end{definition}
+强化学习的常见例子就是各种棋类游戏的AI.
+\subsection{机器学习的一般过程}
+\begin{theorem}[机器学习的一般过程]
+    机器学习一般需要经过以下过程:
+    \begin{enumerate}[label=\tbf{\arabic*.},topsep=0pt,parsep=0pt,itemsep=0pt,partopsep=0pt]
+        \item \tbf{训练}: 利用部分已知数据(即\tbf{训练集, Training Set})进行拟合.
+        \item \tbf{测试}: 利用另一部分已知数据(即\tbf{测试机, Test Set})检验训练结果的准确性.
+        \item \tbf{预测}: 利用前面得出的结论对未知情况进行预测.
+    \end{enumerate}
+\end{theorem}
 \end{document}
