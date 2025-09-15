@@ -70,7 +70,7 @@ y_noisy = y + np.random.normal(loc=0, scale=np.sqrt(0.3), size=x.shape)  # 添�
 \indent 除了在测试集中较差的表现之外,过拟合的另一个特征是模型的参数值变得非常大.这和曲线的明显振荡是对应的.\\
 \indent 解决过拟合问题的一个简单办法是增加测试集的规模,或减小模型的复杂度.另一种常用的方法是\tbf{正则化(Regularization)}.
 \begin{definition}[正则化]
-    \tbf{正则化(Regularization)}是通过在误差函数中加入对模型复杂度的惩罚项,以防止模型过拟合的一种技术.
+    \tbf{正则化(Regularization)}是通过在误差函数中加入对模型复杂度的惩罚项,以防止模型过拟合的方法.
 \end{definition}
 例如,我们可以使用如下的正则化误差函数:
 \[\tilde{E}(\vec{w})=\dfrac12\sum_{i=1}^{N}\left(\hat{y_i}-y_i\right)^2+\dfrac{\lambda}{2}\left|\left|\vec{w}\right|\right|^2\]
@@ -114,7 +114,7 @@ y_noisy = y + np.random.normal(loc=0, scale=np.sqrt(0.3), size=x.shape)  # 添�
 \indent 这说明在噪声服从正态分布的假设下,最小二乘法实际上是极大似然估计的一种实现方式.另外,我们还可以根据前面的推导求出噪声的表达形式:
 \[\dfrac{1}{\beta}=\sigma^2=
 \dfrac{1}{N}\sum_{i=1}^{N}\left(f\left(x_i;\vec{w}_{\text{ML}}\right)-t_i\right)^2\]
-\subsection{Bayes定理}
+\subsubsection{Bayes定理}
 \begin{theorem}[Bayes定理]
     设$A,B$为两个事件,且$P(B)>0$,那么
     \[P(A|B)=\dfrac{P(B|A)P(A)}{P(B)}\]
@@ -143,13 +143,16 @@ y_noisy = y + np.random.normal(loc=0, scale=np.sqrt(0.3), size=x.shape)  # 添�
     \[\hat{x}=\int_0^1xP(x|m,n)\di x=\dfrac{\displaystyle\int_0^1x^{m+1}(1-x)^{n-m}\di x}{\text{B}(m+1,n-m+1)}=\dfrac{\text{B}(m+2,n-m+1)}{\text{B}(m+1,n-m+1)}=\dfrac{m+1}{n+2}\]
     也即,我们估计买彩票中奖的概率为$\dfrac{m+1}{n+2}$.这是符合直觉的,因为当$m=0$时,我们也不应估计中奖概率为$0$;同理,当$m=n$时,我们也不应估计中奖概率为$1$.买的越多,估计的结果就越接近$m/n$,也就越准确.
 \end{solution}
+\subsubsection{Bayes定理在机器学习中的应用}
 现在,我们把目光重新放回机器学习上.把Bayes定理写成如下形式:
 \[p(\vec{w}|\mathcal{D})=\dfrac{p(\mathcal{D}|\vec{w})p(\vec{w})}{p(\mathcal{D})}\]
 这里的$\mathcal{D}$表示训练集,而$\vec{w}$表示模型参数.
 \begin{definition}[先验分布,后验分布和似然函数]
     在上述Bayes定理中,$p(\vec{w})$称为\tbf{先验分布(Prior Distribution)},表示在给定训练集之前对参数$\vec{w}$的认识; $p(\vec{w}|\mathcal{D})$称为\tbf{后验分布(Posterior Distribution)},表示在给定训练集之后对参数$\vec{w}$的认识; $p(\mathcal{D}|\vec{w})$称为\tbf{似然函数(Likelihood Function)},表示在给定参数$\vec{w}$的条件下观测到训练集的概率.
 \end{definition}
-公式中的$p(\mathcal{D})$是一个归一化常数,与参数$\vec{w}$无关,通常就不去特意考虑.因此,为了获取后验分布,我们只需要计算似然函数与先验分布的乘积.\\
+公式中的$p(\mathcal{D})$是一个归一化常数,与参数$\vec{w}$无关,通常就不去特意考虑.因此,为了获取后验分布,我们只需要计算似然函数与先验分布的乘积.
+\paragraph{频率学派的处理方法}
+频率学派认为$\vec{w}$是固定不变的,不随数据变化,因此拟合的目的是求出最优的$\vec{w}$.\\
 \indent 最简单的处理方法,就是假定先验分布是均匀分布,即对所有可能的参数$\vec{w}$都一视同仁.此时,后验分布与似然函数成正比,如果我们取概率最大的$\vec{w}$作为拟合问题的解,这时的似然函数就最大.这就是\tbf{极大似然估计}.
 \begin{definition}[极大似然估计]
     通过选择使似然函数$p\left(\mathcal{D}|\vec{w}\right)$最大的参数$\vec{w}$来拟合数据的方式,称为\tbf{极大似然估计(Maximum Likelihood Estimation)}.
@@ -179,7 +182,25 @@ y_noisy = y + np.random.normal(loc=0, scale=np.sqrt(0.3), size=x.shape)  # 添�
     在形式上一致.事实上,如果取$\lambda=\dfrac{\alpha}{\beta}$,那么极大后验估计与正则化误差函数的结果是一样的.\\
     \indent 同样不难想到,对$p(\vec{w})$的不同估计对应不同的正则化误差函数.
 \end{solution}
-然而,前面所述的方法都是频率学派所用的方法\footnote{尽管我们使用了Bayes定理,但仍然是在做点估计,}.频率学派认为应该根据随机事件重复的频率来考察概率,而概率是完全先验的,不会因为数据而改变.例如,无论如何抛一枚质地均匀的硬币,它的正反面朝上的概率都是$\dfrac12$,即使已经抛出了连续$100$次正面.在机器学习中,这意味着模型的参数是固定的,而数据是依照一定的规律随机分布的.\\
-\indent 贝叶斯学派与频率学派观点相左.他们认为数据才是固定的,模型的参数则是随机的,并且服从某种分布.例如,抛一枚硬币,如果已经抛出了连续$100$次正面,那么我们就有理由怀疑这枚硬币不是均匀的,而是正面朝上的概率更大.在机器学习中,这意味着数据是固定的,我们只能对模型的参数有一个最初的估计,这一估计会随着数据的增加而改变,最终得到比较准确的结论.\\
-\indent 贝叶斯学派的观点与极大后验估计的思想是一致的.然而,贝叶斯学派并不满足于只求出一个最优的参数$\vec{w}$,而是希望得到参数的整个分布.
+\paragraph{Bayes学派的处理方法}
+Bayes学派与频率学派观点相左.他们认为数据才是固定的,模型的参数则是随机的,并且服从某种分布\footnote{例如,抛一枚硬币,如果已经抛出了连续$100$次正面,那么我们就有理由怀疑这枚硬币不是均匀的,而是正面朝上的概率更大.}.我们只能对模型的参数有一个最初的估计\footnote{这和极大后验估计是一样的,但Bayes回归会},这一估计会随着数据的增加而改变,最终得到比较准确的结论.
+\begin{theorem}[Bayes回归]
+    设训练集为$\mathcal{D}$,根据Bayes回归可以得到任意输入$x$的预测值$t$的概率密度函数
+    \[p(t|x,\mathcal{D})=\int p(t|x,\vec{w})p(\vec{w}|\mathcal{D})\di\vec{w}=\mathcal{N}\left(t|m(x),s^2(x)\right)\]
+    其中
+    \[\boldsymbol{\phi}\left(x\right)=\left(1,x,\cdots,x^M\right)^{\mathrm{t}}\]
+    \[m(x)=\beta\,\boldsymbol{\phi}\left(x\right)^{\mathrm{t}}\mat{S}\sum_{i=1}^{N}t_i\,\boldsymbol{\phi}\left(x_i\right)\]
+    \[s^2(x)=\beta^{-1}+\boldsymbol{\phi}\left(x\right)^{\mathrm{t}}\mat{S}\boldsymbol{\phi}\left(x\right)\]
+    \[\mat{S}^{-1}=\alpha\mat{I}+\beta\sum_{i=1}^{N}\boldsymbol{\phi}\left(x_i\right)\boldsymbol{\phi}\left(x_i\right)^{\mathrm{t}}\]
+    这里的$\alpha,\beta$为先验分布与似然函数的参数, $\mat{I}$为单位矩阵.
+\end{theorem}
+\begin{proof}
+    同样地,对于给定的$x_i$,其对应的$y_i$由带噪声的函数给出:
+    \[y_i=g\left(x_i|\vec{w}\right)+\ep=\vec{w}^{\text{t}}\boldsymbol{\phi}\left(x_i\right)+\ep\]
+    其中$\ep\sim\mathcal{N}\left(0,\beta^{-1}\right)$.我们假定$\vec{w}$的先验分布为高斯分布:
+    \[p(\vec{w}|\alpha)=\mathcal{N}\left(\vec{w}|\mbf{0},\alpha^{-1}\mat{I}\right)\]
+    于是$\vec{w}$的后验分布为
+    \[p(\vec{w}|\mathcal{D},\alpha,\beta)=\dfrac{p(\mathcal{D}|\vec{w},\beta)p(\vec{w}|\alpha)}{p(\mathcal{D}|\alpha,\beta)}\]
+    这里的分母仍然是归一化常数,因此考虑分子即可.
+\end{proof}
 \end{document}
