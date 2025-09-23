@@ -75,6 +75,15 @@ y_noisy = y + np.random.normal(loc=0, scale=np.sqrt(0.3), size=x.shape)  # 添�
 例如,我们可以使用如下的正则化误差函数:
 \[\tilde{E}(\vec{w})=\dfrac12\sum_{i=1}^{N}\left(\hat{y_i}-y_i\right)^2+\dfrac{\lambda}{2}\left|\left|\vec{w}\right|\right|^2\]
 代替原来的误差函数进行拟合.其中$\lambda$为正则化参数,控制正则化项的权重.如果$\lambda=0$,那么没有惩罚;$\lambda$越大,惩罚越强,此时模型倾向于用更小的参数进行拟合.$\lambda$极大时,$\vec{w}$的各参数接近$0$,是一条接近横轴的平坦的线.通过调整$\lambda$,我们可以在拟合训练数据和符合测试数据之间找到一个平衡点.
+\begin{definition}[岭回归]
+    上述采用二乘误差函数与参数范数的平方作为正则化项的回归方法,称为\tbf{岭回归(Ridge Regression)}.
+\end{definition}
+同样地,采取不同的正则化项也可以得到不同的正则化方法.
+\begin{definition}[Lasso回归]
+    如果正则化项采用参数范数的绝对值,即
+    \[\tilde{E}(\vec{w})=\dfrac12\sum_{i=1}^{N}\left(\hat{y_i}-y_i\right)^2+\lambda||\vec{w}||_1=\dfrac12\sum_{i=1}^{N}\left(\hat{y_i}-y_i\right)^2+\lambda\sum_{j=0}^{M}|w_j|\]
+    这种回归方法称为\tbf{Lasso回归(Least Absolute Shrinkage and Selection Operator)}.
+\end{definition}
 \subsubsection{维度灾难}
 当输入数据$\vec{x}$的分量较多时,我们称其为高维数据.例如,一张$28\times 28$的灰度图像可以看作是一个$784$维的向量.\\
 \indent 高维数据的一个重要问题是\tbf{维度灾难(Curse of Dimensionality)}.
@@ -195,12 +204,85 @@ Bayes学派与频率学派观点相左.他们认为数据才是固定的,模型�
     这里的$\alpha,\beta$为先验分布与似然函数的参数, $\mat{I}$为单位矩阵.
 \end{theorem}
 \begin{proof}
-    同样地,对于给定的$x_i$,其对应的$y_i$由带噪声的函数给出:
-    \[y_i=g\left(x_i|\vec{w}\right)+\ep=\vec{w}^{\text{t}}\boldsymbol{\phi}\left(x_i\right)+\ep\]
-    其中$\ep\sim\mathcal{N}\left(0,\beta^{-1}\right)$.我们假定$\vec{w}$的先验分布为高斯分布:
-    \[p(\vec{w}|\alpha)=\mathcal{N}\left(\vec{w}|\mbf{0},\alpha^{-1}\mat{I}\right)\]
-    于是$\vec{w}$的后验分布为
-    \[p(\vec{w}|\mathcal{D},\alpha,\beta)=\dfrac{p(\mathcal{D}|\vec{w},\beta)p(\vec{w}|\alpha)}{p(\mathcal{D}|\alpha,\beta)}\]
-    这里的分母仍然是归一化常数,因此考虑分子即可.
+    我们仍然假定观测值$y$可以写成下面的形式:
+    \[y=g(\vec{x};\vec{w})+\epsilon\]
+    其中$\ep$服从均值为$0$,方差为$\beta^{-1}$的正态分布.假定$\vec{w}$的先验也是多元高斯分布\footnote{多元高斯分布的概率密度函数为
+    \[p(\vec{x})=\dfrac{1}{(2\pi)^{n/2}|\boldsymbol{\Sigma}|^{1/2}}\exp\left(-\dfrac12(\vec{x}-\boldsymbol{\mu})^{\mathrm{t}}\boldsymbol{\Sigma}^{-1}(\vec{x}-\boldsymbol{\mu})\right)\]其中$\boldsymbol{\mu}$为均值矢量, $\boldsymbol{\Sigma}$为协方差矩阵.对于这里的先验分布,均值矢量为$\vec{0}$,协方差矩阵为$\alpha^{-1}\mat{I}$.事实上,多元高斯分布等价于每个分量满足独立的一元高斯分布.},即:
+    \[p(\vec{w})=\mathcal{N}\left(\vec{w}|0,\alpha^{-1}\mat{I}\right)\]
+    即各分量$w_i$满足均值为$0$,方差为$\alpha^{-1}$的正态分布,并且各分量相互独立.
+    由于噪声是独立同分布,因此有
+    \[p\left(\mathcal{D}|\vec{w}\right)=\prod_{i=1}^{N}\mathcal{N}\left(t_i|g\left(\vec{x}_i;\vec{w}\right),\beta^{-1}\right)\]
+    取对数可得
+    \[\ln p\left(\mathcal{D}|\vec{w}\right)=-\dfrac{\beta}{2}\sum_{i=1}^{N}\left(t_i-g\left(\vec{x}_i;\vec{w}\right)\right)^2+\text{const}\]
+    将上式中的平方项展开并忽略与$\vec{w}$无关的项,可得
+    \[\ln p\left(\mathcal{D}|\vec{w}\right)=-\dfrac{\beta}{2}\left(\vec{w}^{\mathrm{t}}\sum_{i=1}^{N}\boldsymbol{\phi}\left(\vec{x}_i\right)\boldsymbol{\phi}\left(\vec{x}_i\right)^{\mathrm{t}}\vec{w}-2\sum_{i=1}^{N}t_i\,\boldsymbol{\phi}\left(\vec{x}_i\right)^{\mathrm{t}}\vec{w}\right)+\text{const}\]
+    先验概率$p(\vec{w})$的对数为
+    \[\ln p(\vec{w})=-\dfrac{\alpha}{2}\vec{w}^{\mathrm{t}}\vec{w}+\text{const}\]
+    由Bayes定理,我们有
+    \[\begin{aligned}
+        \ln p(\vec{w}|\mathcal{D})
+        &= \ln p\left(\mathcal{D}|\vec{w}\right)+\ln p(\vec{w})+\text{const} \\
+        &= -\dfrac12\left(\beta\vec{w}^\text{t}\sum_{i=1}^{N}\boldsymbol{\phi}\left(\vec{x}_i\right)\boldsymbol{\phi}\left(\vec{x}_i\right)^{\mathrm{t}}\vec{w}+\alpha\vec{w}^{\text{t}}\vec{w}\right)+\beta\sum_{i=1}^{N}t_i\,\boldsymbol{\phi}\left(\vec{x}_i\right)^{\mathrm{t}}\vec{w}+\text{const} \\
+        &= -\dfrac{1}{2}\vec{w}^\text{t}\left(\beta\sum_{i=1}^{N}\boldsymbol{\phi}\left(\vec{x}_i\right)\boldsymbol{\phi}\left(\vec{x}_i\right)^{\mathrm{t}}+\alpha\mat{I}\right)\vec{w}+\left(\beta\sum_{i=1}^{N}t_i\boldsymbol{\phi}\left(\vec{x}_i\right)^{\mathrm{t}}\right)\vec{w}+\text{const}
+    \end{aligned}\]
+    令
+    \[\mat{S}^{-1}=\alpha\mat{I}+\beta\sum_{i=1}^{N}\boldsymbol{\phi}\left(\vec{x}_i\right)\boldsymbol{\phi}\left(\vec{x}_i\right)^{\mathrm{t}}\ \ \ \ \ \vec{b}=\beta\sum_{i=1}^{N}t_i\boldsymbol{\phi}\left(\vec{x}_i\right)^{\mathrm{t}}\]
+    则有
+    \[\ln p(\vec{w}|\mathcal{D})=-\dfrac{1}{2}\vec{w}^\text{t}\mat{S}^{-1}\vec{w}+\vec{b}^\text{t}\vec{w}+\text{const}\]
+    我们可以发现,上述式子恰好可以写作平方展开的形式.令$\mat{S}^{-1}\vec{m}=\vec{b}$,则有
+    \[\ln p(\vec{w}|\mathcal{D})=-\dfrac12\left(\vec{w}-\vec{m}\right)^{\mathrm{t}}\mat{S}^{-1}\left(\vec{w}-\vec{m}\right)+\text{const}\]
+    这说明后验分布$p(\vec{w}|\mathcal{D})$也是一个高斯分布,其均值为$\vec{m}$,协方差矩阵为$\mat{S}$:
+    \[p(\vec{w}|\mathcal{D})=\mathcal{N}\left(\vec{w}|\vec{m},\mat{S}\right)\]
+    最后用Bayes定理计算预测值$t$的概率密度函数:
+    \[\begin{aligned}
+        p(t|x,\mathcal{D})
+        &= \int p(t|x,\vec{w})p(\vec{w}|\mathcal{D})\di\vec{w} \\
+        &= \int \mathcal{N}\left(t|\vec{w}^{\mathrm{t}}\boldsymbol{\phi}\left(x\right),\beta^{-1}\right)\mathcal{N}\left(\vec{w}|\vec{m},\mat{S}\right)\di\vec{w} \\
+        &= \mathcal{N}\left(t|m(x),s^2(x)\right)
+    \end{aligned}\]
 \end{proof}
+\subsection{基函数}
+\subsubsection{基函数的概念}
+\begin{definition}[基函数]
+    回归模型的函数$f\left(\vec{x};\vec{w}\right)$可以表示为一组函数的线性组合:
+    \[f\left(\vec{x};\vec{w}\right)=w_0\phi_0\left(\vec{x}\right)+\cdots+w_M\phi_M\left(\vec{x}\right)
+    =\sum_{j=0}^{M}w_j\phi_j\left(\vec{x}\right)=\vec{w}^{\text{t}}\boldsymbol{\phi}\left(\vec{x}\right)\]
+    这组函数$\phi_0\left(\vec{x}\right),\cdots,\phi_M\left(\vec{x}\right)$称为\tbf{基函数(Basis Functions)}.
+\end{definition}
+\subsubsection{常见的基函数模型}
+\paragraph{多项式基函数}
+多项式基函数的形式为
+\[\phi_j\left(x\right)=x^j(j=0,1,\cdots,M)\]
+多项式基函数具有全局性,一处的改变会影响所有函数的改变.
+\paragraph{高斯基函数}
+高斯基函数的形式为
+\[\phi_j\left(x\right)=\exp\left(-\dfrac{\left(x-\mu_j\right)^2}{2\sigma^2}\right)\]
+其中$\mu_j$为高斯基函数的中心, $\sigma$为宽度.高斯基函数具有局部性,一处的改变只会影响与其中心相近的函数.
+\paragraph{Sigmoid基函数}
+Sigmoid基函数的形式为
+\[\phi_j\left(x\right)=\dfrac{1}{1+\exp\left(-\beta\left(x-\mu_j\right)\right)}\]
+其中$\mu_j$为Sigmoid基函数的中心, $\beta$为宽度. Sigmoid基函数具有平滑性,在中心附近变化较大,而在两侧变化较小.\\
+\indent Sigmoid基函数常用于神经网络中,作为激活函数.
+\subsubsection{基函数用于回归}
+如果仍然采用前面的假设,即观测值$y$可以写成下面的形式:
+\[y=f(\vec{x};\vec{w})+\epsilon\]
+其中$f(\vec{x};\vec{w})$是由基函数构成的线性组合:
+\[f(\vec{x};\vec{w})=\sum_{j=0}^{M}w_j\phi_j\left(\vec{x}\right)=\vec{w}^{\text{t}}\boldsymbol{\phi}\left(\vec{x}\right)\]
+那么通过极大似然估计可以得到
+\[\vec{w}_{ML}=\left(\boldsymbol{\Phi}^{\text{t}}\boldsymbol{\Phi}\right)^{-1}\boldsymbol{\Phi}^{\text{t}}\vec{y}=\boldsymbol{\Phi}^{\dagger}\vec{y}\]
+其中\tbf{设计矩阵}$\boldsymbol{\Phi}$为
+\[\boldsymbol{\Phi}=\begin{bmatrix}
+    \phi_0\left(\vec{x}_1\right) & \cdots & \phi_M\left(\vec{x}_1\right) \\
+    \vdots & \ddots & \vdots \\
+    \phi_0\left(\vec{x}_N\right) & \cdots & \phi_M\left(\vec{x}_N\right)
+\end{bmatrix}\]
+当数据太多时,可以采用循序学习的方式,即每次只用一组数据进行更新.
+\begin{definition}[循序学习]
+    \tbf{循序学习(Sequential Learning)}是指每次只用一组数据进行更新的学习方式.对于给定的一组数据$(\vec{x}_n,t_n)$,我们有
+    \[\vec{w}^{(n)}=\vec{w}^{(n-1)}+\eta\left(t_n-\left(\vec{w}^{(n-1)}\right)^\text{t}\boldsymbol{\phi}\left(\vec{x}_n\right)\right)\boldsymbol{\phi}\left(\vec{x}_n\right)\]
+    这里的$\eta$为学习率,控制每次更新的幅度.
+\end{definition}
+循序学习也称为在线学习,在神经网络与深度学习中被称作随机梯度下降.\\
+\indent 另外,如果采用正则化误差函数,例如岭回归,那么结果为
+\[\vec{w}_{ML}=\left(\lambda\mat{I}+\boldsymbol{\Phi}^{\text{t}}\boldsymbol{\Phi}\right)^{-1}\boldsymbol{\Phi}^{\text{t}}\vec{y}\]
 \end{document}
