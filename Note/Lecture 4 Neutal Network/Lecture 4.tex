@@ -1,0 +1,44 @@
+\documentclass{ctexart}
+\usepackage{Note}
+\begin{document}
+\setcounter{FormalCounter}{0}
+\section{神经网络}
+\subsection{神经网络概述}
+\subsubsection{适应数据的可变基}
+前面章节中的回归方法在数学上可以描述为
+\[y\left(\vec{x}\right)=f\left(\sum_{j=1}^{M}w_j\phi_j(\vec{x})\right)\]
+基函数$\phi_j(x)$的选择是固定的,当数据维度较高时会导致基函数的数目过于庞大,导致维度灾难.\\
+\indent 为了解决这一问题,可以引入适应基的概念,即固定基函数的数目,但允许基函数本身随训练数据进行调整.
+\begin{definition}[适应基]
+    形如$\phi_j(\vec{x},\vec{p}_j)$的基函数被称作\tbf{适应基(Adaptive Basis Functions)},它不仅依赖于输入变量$\vec{x}$,还依赖于一组可调参数$\vec{p}_j$.通过调整这些参数,可以使基函数更好地适应训练数据.
+\end{definition}
+\subsubsection{神经网络的数学模型}
+神经网络可以被描述为一个$N+1$层的网络,每层包含若干个节点(神经元). $n=1$的层表示输入层,节点数目即输入$\vec{x}$的分量数目(有时会额外增加一个为$1$的分量表示截距项), $n=N+1$的层表示输出层,节点数目即输出$\vec{y}$的分量数目;中间的层称为隐藏层.每个节点包含刺激值$z^{(k)}_i$和响应值$a^{(k)}_i$.\\
+\indent 神经网络的迭代方式如下:对于第$k+1$层的每个节点$j$,它的刺激值$z^{(k+1)}_j$由上一层的所有节点的响应值$a^{(k)}_i$加权得到,然后通过一个激活函数$h(\cdot)$得到响应值$a^{(k+1)}_j$,即
+\[z^{(k+1)}_j=\sum_{i}w^{(k)}_{ij}a^{(k)}_i,\quad a^{(k+1)}_j=h\left(z^{(k+1)}_j\right)\]
+其中$w^{(k)}_{ij}$表示第$k$层的节点$i$到第$k+1$层的节点$j$的连接权重.\\
+\indent 神经网络的功能依赖于激活函数$h(\cdot)$的选择,常用的激活函数包括Sigmoid函数, ReLU函数和tanh函数等.通过一定的办法求出连接权重$w^{(k)}_{ij}$后,神经网络就可以对输入数据进行映射,完成各种任务.\\
+\indent 可以看出,神经网络的每一层都相当于一次逻辑回归,因此神经网络可以看作是多层串联的逻辑回归模型.大多数神经网络都具有多个隐藏层.深度学习主要指的就是较多隐藏层的神经网络,称深度神经网络.
+\subsubsection{万能近似定理}
+神经网络具有很强的拟合能力.事实上,数学上已经证明下面的定理:
+\begin{theorem}[万能近似定理]
+    设$h:\mathbb{R}\to\mathbb{R}$是一个非恒等的、有界的、单调递增的连续函数.令$C\left(\mathbb{R}^n\right)$表示从$\mathbb{R}^n$到$\mathbb{R}$的所有连续函数构成的空间.对于任意$f\in C\left(\mathbb{R}^n\right)$和$\varepsilon>0$,存在一个整数$M$,常数$v_i,b_i\in\mathbb{R}$和向量$\vec{w}_i\in\mathbb{R}^n$使得
+    \[\left|f(\vec{x})-\sum_{i=1}^{M}v_ih\left(\vec{w}_i^T\vec{x}+b_i\right)\right|<\varepsilon,\quad \forall \vec{x}\in \mathbb{R}^n\]
+    翻译成神经网络的语言即:一个具有单隐藏层的神经网络,只要隐藏层节点数目足够多,就可以以任意精度逼近任意连续函数.
+\end{theorem}
+\subsection{神经网络的训练}
+\subsubsection{误差函数}
+与线性回归类似,神经网络的训练目标也是最小化误差函数.对于回归问题,常用的误差函数也是均方误差函数:
+\[E(\vec{w})=\frac{1}{2}\sum_{n=1}^{N}\|\vec{y}(\vec{x}_n,\vec{w})-\vec{t}_n\|^2\]
+对于分类问题,常用的误差函数是交叉熵误差函数:
+\[E(\vec{w})=-\sum_{n=1}^{N}\sum_{k=1}^{K}t_{nk}\ln y_k(\vec{x}_n,\vec{w})\]
+\subsubsection{神经网络的梯度:误差反向传播算法}
+由前面递推定义的神经网络模型是一个嵌套函数,因此误差函数关于连接权重$w^{(k)}_{ij}$的梯度可以通过链式法则进行计算.定义辅助变量
+\[\delta^{(k)}_i=\dfrac{\p E}{\p z^{(k)}_i}\]
+则
+\[\delta^{(k)}_i=\sum_j\dfrac{\p E}{\p z^{(k+1)}_j}\dfrac{\p z^{(k+1)}_j}{\p a^{(k)}_i}\dfrac{\p a^{(k)}_i}{\p z^{(k)}_i}=h'\left(z_i^{(k)}\right)\sum_{j}\delta_{j}^{(k)}w_{ij}^{(k)}\]
+\[\dfrac{\p E}{\p w^{(k)}_{ij}}=\dfrac{\p E}{\p z^{(k+1)}_{j}}\dfrac{\p z^{(k+1)}_{j}}{\p w^{(k)}_{ij}}=\delta_{j}^{(k+1)}a_i^{(k)}\]
+对于回归问题和分类问题,输出层(假定其为$N+1$层)的$\delta$值可由$E$的形式统一得出简单的表达式:
+\[\delta_i^{(N+1)}=y_i-t_i=a_j^{(N+1)}-t_n\]
+这样,每次计算先正向逐层迭代计算激活信号$a_i^{(k)}$,然后反向逐层迭代计算$\delta_i^{(k)}$,最后计算梯度$\dfrac{\p E}{\p w^{(k)}_{ij}}$.这一过程称为\tbf{误差反向传播(Backpropagation)}算法.
+\end{document}
