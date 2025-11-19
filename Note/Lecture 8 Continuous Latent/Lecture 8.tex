@@ -1,0 +1,29 @@
+\documentclass{ctexart}
+\usepackage{Note}
+\begin{document}
+\section{隐藏连续变量:降维}
+\subsection{主成分分析}
+\begin{definition}[主成分分析]
+    \tbf{主成分分析(Principal Component Analysis, PCA)}是一种统计方法,用于通过线性变换将数据从高维空间映射到低维空间,以保留数据的主要特征和结构.
+\end{definition}
+一般而言,数据的分布在空间中是各向异性的,即在某些方向上数据的变化更显著.通过PCA可以找到点云数据的主要方向(即主轴),舍弃变化较小的方向,从而实现数据降维.\\
+\indent 首先,考虑给定的一组点$\li{\vec x},N$以及中心坐标
+\[\bar{\vec{x}}=\dfrac1N\sum_{i=1}^{N}\vec{x}_i\]
+首先,为了防止平移对PCA结果的影响,我们需要将点云数据进行中心化处理,即将每个点减去中心坐标:
+\[\vec{x}_n'=\vec{x}_n-\bar{\vec{x}},\quad n=1,\cdots,N\]
+构造矩阵
+\[\mat{X}=\begin{bmatrix}
+    \vec{x}_1'\\\vdots\\\vec{x}_N'
+\end{bmatrix}\]
+然后计算$\mat{X}$的协方差矩阵
+\[\bs\Sigma_{\mat{X}}=\mat{X}\mat{X}^{\text{t}}\]
+二维情况下的协方差矩阵的两个特征向量$\vec{v}_1,\vec{v}_2$表示数据的两条轴线.对应于更大的特征值的特征向量$\vec{v}_1$表示数据变化更显著的方向,即主成分方向,而$\vec{v}_2$则表示数据变化最小的方向对于更高维的情况也是同理.\\
+\indent 对协方差矩阵$\bs{\Sigma}_{\mat{X}}$进行特征值分解,可得:
+\[\bs{\Sigma}_{\mat{P}}=\mat{V}\bs{\Lambda}\mat{V}^{\text{t}}\]
+其中矩阵$\mat{V}$的列向量即为$\bs{\Sigma}_{\mat{X}}$的特征向量,它们也就确定了点云的主轴方向.矩阵$\bs{\Lambda}$为对角矩阵,其对角线上的元素为对应的特征值,这些特征值表示了数据在各个主轴方向上的方差大小.\\
+\indent 通过选择前$k$个最大的特征值所对应的特征向量,我们可以构造一个降维映射矩阵$\mat{W}$:
+\[\mat{W}=[\vec{v}_1,\vec{v}_2,\cdots,\vec{v}_k]\]
+然后,我们可以将原始数据投影到这个低维空间中,得到降维后的数据表示:
+\[\mat{Y}=\mat{X}\mat{W}\]
+这就完成了数据的降维.
+\end{document}
