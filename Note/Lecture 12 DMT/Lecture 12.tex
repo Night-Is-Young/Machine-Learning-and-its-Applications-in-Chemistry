@@ -1,0 +1,104 @@
+\documentclass{ctexart}
+\usepackage{Note}
+\begin{document}
+\section{强化学习的三种算法}
+\subsection{动态规划}
+\tbf{动态规划(Dynamic Programming, DP)}是运筹学的一个分支,是求解决策过程最优化的一种数学方法.动态规划可用于模型$p(s',r|s,a)$已知的马尔科夫决策过程的最优策略的求解,因此可以作为一种强化学习的方法使用.
+\subsubsection{策略评估}
+根据前一节的介绍,状态价值函数$v_\pi(s)$满足贝尔曼方程:
+\[v_\pi(s)=\sum_{a\in\mathcal{A}}\pi(a|s)\sum_{s'\in\mathcal{S},r\in\mathcal{R}}p(s',r|s,a)\left(r+\gamma v_{\pi}(s')\right)\]
+这是以$v_{\pi}(s)$为变量的线性方程组,因此可以用线性方程组的解法直接求解.但是,这样做的效率往往比较低,因此动态规划通常将公式看作对$v_\pi(s)$的迭代公式,利用如下迭代法来进行求解:
+\[v_{k+1}(s)=\sum_{a\in\mathcal{A}}\pi(a|s)\sum_{s'\in\mathcal{S},r\in\mathcal{R}}p(s',r|s,a)\left(r+\gamma v_{k}(s')\right)\]
+数学上可以证明
+\[\lim_{k\to\infty}v_{k}(s)=v_\pi(s)\]
+因此,实际求解时只需将$v_k(s)$初始化,例如赋值为$0$,然后迭代直至收敛即可.
+\subsubsection{策略改进}
+利用策略评估得到某个策略$\pi(a|s)$下的价值函数$v_\pi(s)$以后,就可以据此进行\tbf{策略改进(Policy Improvement)},即通过优化当前策略以获得更优策略,其核心目标是让新策略的价值函数不低于原策略,以便最终逐步逼近最优策略.\\
+\indent 当智能体面对状态$s$时,如果一直遵循策略$\pi$,则回报是$v_\pi(s)$.如果智能体不遵循策略$\pi$而采取行动$a$,之后再遵循$\pi$,此时的回报就是策略$\pi$下的行动价值函数
+\[q_\pi(s,a)=\sum_{s'\in\mathcal{S},r\in\mathcal{R}}p(s',r|s,a)\left(r+\gamma v_\pi(s')\right)\]
+如果$q_\pi(s,a)>v_\pi(s)$,那么这样的选择就比一直遵循$\pi$更好.于是下次处于状态$s$时就仍应选择行动$a$.这样得到的新策略$\pi'$就应当比$\pi$更优.一般的,我们有如下定理.
+\begin{theorem}[策略改进定理]
+    对于确定性的策略$\pi$和$\pi'$,如果对于任一状态$s\in\mathcal{S}$都有
+    \[q_\pi(s,\pi'(s))\geq v_\pi(s)\]
+    则$\pi'$不劣于$\pi$,即$v_{\pi'}(s)\geq v_\pi(s)$.\\
+    如果是随机性策略,则上述式子应改写为
+    \[\sum_{a\in\mathcal{A}}\pi'(a|s)\sum_{s'\in\mathcal{S},r\in\mathcal{R}}p(s',r|s,a)\left(r+\gamma v_\pi(s')\right)\geq v_\pi(s)\]
+\end{theorem}
+\begin{proof}
+    
+\end{proof}
+由此,我们可以采用前面所述的贪心的方法更新策略.对于基于策略$\pi$的价值函数$v_\pi(s)$,可以做前向单步搜索,构造如下贪心策略:
+\[\pi'(s)=\arg\max_{a}q_\pi(s,a)=\arg\max_a\sum_{s'\in\mathcal{S},r\in\mathcal{R}}p(s',r|s,a)\left(r+\gamma v_\pi(s')\right)\]
+由上式的最大化结果可知$q_\pi(s,\pi'(s))=\max_a q_\pi(s,a)$,是所有行动$a$中使得$q_\pi(s,a)$中最大的.另一方面又有$v_\pi(s)=\displaystyle\sum_{a\in\mathcal{A}}\pi(a|s)q_\pi(s,a)$是所有$q_\pi(s,a)$的加权平均,因此总有$q_\pi(s,\pi'(s))\geq v_\pi(s)$,满足策略改进定理,因此$\pi'$总是比$\pi$更好的策略(除非$\pi$已经是在$s$下最优的策略).\\
+\indent 总之,我们证明了使用单步的贪心算法不断迭代就能使策略最优化.这是动态规划求解强化学习问题的核心机制之一.
+\subsubsection{策略迭代与价值迭代}
+按照上述过程,我们可以把策略迭代过程描述如下:
+\[\pi_0\xrightarrow{\text{E}}v_{\pi_0}\xrightarrow{\text{I}}\pi_1\xrightarrow{\text{E}}v_{\pi_1}\xrightarrow{\text{I}}\pi_2\xrightarrow{\text{E}}\cdots\xrightarrow{\text{I}}\pi_{\ast}\xrightarrow{\text{E}}v_{\pi_\ast}\]
+其中E为策略评估步骤, I为策略改进步骤.由于每次策略改进都使策略更优,因此算法能保证收敛到最优解.这样的EI循环与聚类问题中的EM循环是非常相似的.\\
+\indent 在策略评估E步骤中,通常需要反复迭代才能得到策略$\pi_k$的价值函数$v_{\pi_k}(s)$.由于$\pi_k$本来就作为需要改进的量,因此精确计算并无必要,我们可以只进行一次迭代.于是就有以下的\tbf{价值迭代算法}:
+\[v_{k+1}(s)=\max_a\sum_{s'\in\mathcal{S},r\in\mathcal{R}}p(s',r|s,a)\left(r+\gamma v_k(s')\right)\]
+这就把E和I步骤合为一步.在收敛后即可导出最优策略$\pi_\ast$.
+\subsection{蒙特卡罗方法}
+在强化学习中,\tbf{蒙特卡罗(Monte Carlo, MC)方法}是一类基于采样轨迹来学习价值函数或策略的方法.它不需要关于环境的完整信息(即$p(s',r|s,a)$),而是直接从经验中学习,即利用来自真实或模拟的环境交互中采样得到的状态,行动,回报的序列数据.蒙特卡罗方法的核心思想是通过多次试验(采样)的平均结果来逼近真实的期望价值.
+\subsubsection{价值估计与策略改进}
+状态$s$在策略$\pi$下的价值函数就是$G_t$的期望值,即$v_\pi(s)=\mathbb{E}[G_t|S_t=s]$.从一条轨迹可以直接得到
+\[G_t=\sum_{k=0}^{T}\gamma^kR_{k+t+1}\]
+蒙特卡罗方法就是通过在策略$\pi$下多次采样包含状态$s$的完整轨迹,计算每次轨迹中从$s$开始的$G_t$,取其均值作为$v_\pi(s)$的估计.\\
+\indent 常用的\tbf{首次访问型MC算法(First-visit MC)}的流程如下:
+\begin{enumerate}[label=\tbf{\arabic*.}]
+    \item 输入待评估的策略$\pi$.
+    \item 对于所有状态$s$,初始化$s$的采样列表$R(s)$.
+    \item 根据$\pi$生成一幕序列
+    \[S_0,A_0,R_1,S_1,A_1,R_1,\cdots,S_{T-1},A_{T-1},R_T\]
+    对本幕中的每一步循环,分别令$t=T-1,T-2,\cdots,0$,根据$G_t=\gamma G_{t+1}+R_{t+1}$计算$G_t$,然后如果$S_t$没有在$S_0,\cdots,S_{t-1}$中出现过,就将$G_t$加入$S_t$的采样列表$R(S_t)$中.
+    \item 重复上述采样操作,最后根据$S_t$的采样列表$R(S_t)$的均值计算$v_\pi(S_t)$.
+\end{enumerate}
+即对每条轨迹中首次出现的$s$进行记录和平均.另外,还有\tbf{每次访问型MC算法(Every-visit MC)},即对每条轨迹中所有出现的$s$都进行记录和平均.\\
+\indent 当采样的轨迹足够多时,两种算法都能收敛到$v_\pi(s)$.当轨迹有限时,首次访问型MC算法是无偏的,而每次访问型MC算法则是有偏的.当轨迹较少时,每次访问型MC算法效果更好,因为它能提取更多的数据进行计算;当轨迹较多时,首次访问型MC算法收敛更快.另外,对动作价值函数$q_\pi(s,a)$的计算也是类似的.
+\subsubsection{基于重要性采样的离轨策略}
+所有的学习控制方法都面临一个困境:希望学到的策略可以使随后的行为是最优的(此时往往只有一个最优行动),但是为了搜索所有的行动(以保证找到最优行动与策略),又需要采取非最优行动.我们可以采用两个策略,一个用于学习并成为最优策略,而另一个则更加具有探索性,用于形成采样的样本.普适地讲,它们分属于以下两种类型:
+\begin{enumerate}[label=]
+    \item \tbf{同轨策略}:用于生成采样数据序列的策略$b$和用于实际决策的待评估和改进的策略$\pi$是\textit{相同的}.
+    \item \tbf{离轨策略}:用于生成采样数据序列的策略$b$和用于实际决策的待评估和改进的策略$\pi$是\textit{不同的}.
+\end{enumerate}
+通俗而言,同轨策略可以类比为自己下棋并提高水平,而离轨策略可以类比为看别人下棋提高水平.我们现在来证明离轨策略的有效性.
+\begin{proof}
+    从$S_t$出发,轨迹$S_{t},A_{t},S_{t+1},A_{t+1},\cdots,S_T$在策略$\pi$下发生的概率为
+    \[p(A_t,S_{t+1},\cdots,S_{T}|S_t,\pi)=\prod_{k=t}^{T-1}\pi(A_k|S_k)p(S_{k+1}|S_{k},A_{k})\]
+    类似地可得出同样的轨迹在策略$b$下的概率.因此,同一条轨迹在两种策略下的概率之比为
+    \[\rho_{t:T-1}=\dfrac{\displaystyle\prod_{k=t}^{T-1}\pi(A_k|S_k)p(S_{k+1}|S_{k},A_{k})}{\displaystyle\prod_{k=t}^{T-1}b(A_k|S_k)p(S_{k+1}|S_{k},A_{k})}=\dfrac{\displaystyle\prod_{k=t}^{T-1}\pi(A_k|S_k)}{\displaystyle\prod_{k=t}^{T-1}b(A_k|S_k)}\]
+    因此,注意到这概率与环境的响应机制$p(S_{k+1}|S_k,A_k)$无关,只与两个策略有关.\\
+    \indent 根据定义,策略$b$下的价值函数为
+    \[v_b(s)=\mathbb{E}_b[G_t|S_t=s]=\sum_{A_t,S_{t+1}\cdots,S_T}p(A_t,S_{t+1},\cdots,S_{T}|S_t,b)G_t\]
+    而策略$\pi$下的价值函数可以写成
+    \[\begin{aligned}
+        v_\pi(s)
+        &=\sum_{A_t,S_{t+1}\cdots,S_T}p(A_t,S_{t+1},\cdots,S_{T}|S_t,\pi)G_t\\
+        &=\rho_{t:T-1}\sum_{A_t,S_{t+1}\cdots,S_T}p(A_t,S_{t+1},\cdots,S_{T}|S_t,b)G_t\\
+        &=\mathbb{E}_{b}[\rho_{t:T-1}G_t|S_t=s]
+    \end{aligned}\]
+    因此,根据策略$b$下产生的蒙特卡罗模拟轨迹可以调整计算得到策略$\pi$下的结果:
+    \[v_\pi(s)=\dfrac{\displaystyle\sum_{\text{traj}}\rho_{t:T-1}G_t}{\displaystyle\sum_{\text{traj}}1}=\dfrac{1}{N}\sum_{\text{traj}}\rho_{t:T-1}G_t\]
+    其中traj是满足$S_t=s$的采样轨迹,$N$是采样的轨迹数目.\\
+    \indent 另外,我们知道轨迹概率满足如下归一性质:
+    \[\sum_{A_t,S_{t+1}\cdots,S_T}p(A_t,S_{t+1},\cdots,S_{T}|S_t,\pi)=1\]
+    于是我们也可以把$v_\pi(s)$改写为
+    \[v_\pi(s)=\dfrac{\displaystyle\sum_{A_t,S_{t+1},\cdots,S_T}p(A_t,S_{t+1},\cdots,S_T|S_t,\pi)G_t}{\displaystyle\sum_{A_t,S_{t+1},\cdots,S_T}p(A_t,S_{t+1},\cdots,S_T|S_t,\pi)}\]
+    然后把$\rho_{t:T-1}$代入上式可得
+    \[v_\pi(s)=\dfrac{\mathbb{E}_b(\rho_{t:T-1}G_t|S_t=s)}{\mathbb{E}_b(\rho_{t:T-1}|S_t=s)}=\dfrac{\displaystyle\sum_{\text{traj}}\rho_{t:T-1}G_t}{\displaystyle\sum_{\text{traj}}\rho_{t:T-1}}\]
+\end{proof}
+于是我们得到了两种计算$v_\pi(s)$的公式.它们在采样轨迹数目足够多时都收敛到真值;在轨迹有限时,前者是无偏的,但方差较大;后者是有偏的,但方差较小.实际应用中一般采用后者.
+\subsection{时序差分算法}
+\subsubsection{时序差分预测}
+\tbf{时序差分算法(Temporal Difference, TD)}是强化学习中一种结合了动态规划和蒙特卡罗方法优点的重要算法,核心是通过bootstrapping(利用估计值更新估计值)和在线学习(无需等待完整轨迹结束)来更新价值估计.\\
+\indent 在蒙特卡罗模拟的在线学习中,根据$v_\pi(s)=\mathbb{E}_\pi[G_t|S_t=s]$可得如下更新公式
+\[V(S_t)\leftarrow V(S_t)+\eta(G_t-V(S_t))\]
+其中$V(S_t)$是$v_\pi(S_t)$的估计值, $\eta$是学习率, $G_t$需要等待一条轨迹结束之后才能运算得到.\\
+\indent 现在,根据$G_t$的性质可知$v_\pi(s)=\mathbb{E}_\pi[R_{t+1}+\gamma v_\pi(S_{t+1})|S_t=s]$,于是可以把更新公式改写为
+\[V(S_t)\leftarrow V(S_t)+\eta(R_{t+1}+\gamma V(S_{t+1})-V(S_t))\]
+其中$R_{t+1}$和$S_{t+1}$在单步完成后即可得到.利用上式即可实现简单的时序差分算法,称作单步TD法.
+\subsubsection{时序差分控制与Q学习}
+在决策优化问题中更重要的是动作价值函数.类似地,我们可以写出$q_\pi(s,a)$的估计$Q(S_t,A_t)$的更新公式:
+\[Q(S_t,A_t)\leftarrow Q(S_t,A_t)+\eta(R_{t+1}+\gamma Q(S_{t+1},A_{t+1})-Q(S_t,A_t))\]
+这里需要使用轨迹数据的五元组$(S_t,A_t,R_{t+1},S_{t+1},A_{t+1})$,因此算法称作\tbf{SARSA算法}.这本质上是一种\textit{同轨策略}.
+\end{document}
