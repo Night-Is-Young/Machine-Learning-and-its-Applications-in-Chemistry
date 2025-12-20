@@ -1,64 +1,35 @@
 \documentclass{ctexart}
 \usepackage{Note}
 \begin{document}
-\section{组合模型}
-在实际使用中,将多个模型结合起来往往能进一步提高总体性能,这种方法被称作\tbf{组合模型(Combination Models)}或\tbf{集成学习(Ensemble Learning)}.在组合模型中,我们先训练多个模型,称为\tbf{弱学习器},然后再将它们按照一定的方式结合起来.\\
-\indent 在大多数情况下,我们会使用单一的基础学习算法来训练多个弱学习器,这样组成的模型被称作\tbf{同质的}组合模型.如果使用不同的基础学习算法来训练弱学习器,则称为\tbf{异质的}组合模型.\\
-\indent 对弱学习器的选择应当与组合方法相匹配.对于低偏差高方差的基础模型,应当使用能减小方差的组合方法;对于低方差高偏差的基础模型,应当使用能减少偏差的组合方式.
-\subsection{委员会方法与自抽样}
-\begin{definition}[委员会方法]
-    训练多个不同模型,取其均值作为结果的方法称为\tbf{委员会方法(Committees)}.
-\end{definition}
-委员会方法能有效减少模型的方差.下面从数学上证明这一点.
-\begin{proof}
-    假定我们有$M$个模型$y_1(\vec{x}),\cdots,y_M(\vec{x})$,则委员会的预测结果$y_{\text{com}}$为
-    \[y_{\text{com}}(\vec{x})=\dfrac{1}{M}\sum_{m=1}^{M}y_m(\vec{x})\]
-    设第$m$个模型的预测结果$y_m(\vec{x})$与真值$h(\vec{x})$的关系为
-    \[y_m(\vec{x})=h(\vec{x})+\ep_m(\vec{x})\]
-    于是该模型的均方误差为
-    \[\mathbb{E}_m=\left\langle[y_m(\vec{x})-h(\vec{x})]^2\right\rangle=\left\langle\ep_m(\vec{x})^2\right\rangle\]
-    于是委员会的均方误差为
-    \[\mathbb{E}_{\text{com}}=\left\langle\left[\dfrac{1}{M}\sum_{m=1}^{M}y_m(\vec{x})-h(\vec{x})\right]^2\right\rangle=\left\langle\left[\dfrac{1}{M}\sum_{m=1}^{M}\ep_m(\vec{x})\right]^2\right\rangle\]
-    我们假定每个模型都是无偏的,即$\left\langle\ep_m(\vec{x})\right\rangle=0$,且各模型之间的误差相互独立,即$\left\langle\ep_m(\vec{x})\ep_n(\vec{x})\right\rangle=0(m\neq n)$.于是
-    \[\mathbb{E}_{\text{com}}=\dfrac{1}{M^2}\sum_{m=1}^{M}\left\langle\ep_m(\vec{x})^2\right\rangle=\dfrac{1}{M^2}\sum_{m=1}^{M}\mathbb{E}_{m}=\dfrac{1}{M}\left\langle\mathbb{E}_{m}\right\rangle\]
-    也即委员会预测的均方误差只有单个模型平均均方误差的$1/M$.当然,实际情况中个模型的误差并非完全独立,但只要相关性不强,委员会方法仍然能显著降低方差.
-\end{proof}
-委员会方法使用的不同模型通常是用单一基础学习算法在不同的数据集进行训练得到的.如果简单地把原式数据集划分为$M$份,可能导致每一份的数据量过少而产生偏差.这就要用到自抽样法.
-\begin{definition}[自抽样法]
-    \tbf{自抽样法(Bootstrap Sampling)}是从原始数据集中有放回地随机抽取样本,组成新的训练集的方法.具体而言,对一个样本数为$N$的数据集,按有放回随机抽样的方法抽取$N$次形成一个新的样本数为$N$的数据集$\mathcal{D}_m$,重复$M$次用作训练每个模型的数据集.
-\end{definition}
-自抽样法在统计学上属于非参数的蒙特卡洛方法.当自抽样法和委员会方法结合使用时,被称为\tbf{袋装法(Bagging)}或\tbf{自举汇聚法(Bootstrap Aggregating)}.
-\subsection{提升法和自适应增强法}
-前述的委员会方法使用的是并行方式组合模型,而下面介绍的提升法使用的是串行方式组合模型.
-\begin{definition}[提升法]
-    \tbf{提升法(Boosting)}是通过串行地训练多个弱学习器,并将它们结合成一个强学习器的方法.
-\end{definition}
-提升法的朴素思想类似于错题本,即每次训练完成之后将预测错误的样本加大权重,使得下一个弱学习器更关注这些难以预测的样本.这样经过多次训练后,最终的强学习器能更好地处理各种样本.下面以\tbf{自适应增强法(AdaBoost)}为例介绍提升法的具体过程,这是一种用于二分类问题的提升算法.
-\begin{enumerate}[label=\tbf{\arabic*.}]
-\item 初始化数据集的样本权重:
-\[w_n^{(1)}=\dfrac{1}{N},\quad n=1,2,\cdots, N\]
-\item 依次对模型$m=1,2,\cdots,M$执行以下步骤:
-\begin{enumerate}[label=\tbf{(\alph*)}]
-    \item 采用如下误差函数对模型$m$进行训练:
-    \[J_m=\sum_{n=1}^{N}w_n^{(m)}I(y_m(\vec{x}_n)\neq t_n)\]
-    其中$I(y_m(\vec{x}_n)\neq t_n)$在预测预测错误时返回$1$, 否则返回$0$.
-    \item 计算模型$m$的加权错误率:
-    \[\ep_m=\dfrac{J_m}{\displaystyle\sum_{n=1}^{N}w_n^{(m)}},\quad\alpha_m=\ln\dfrac{1-\ep_m}{\ep_m}\]
-    这里$\ep_m$即为模型$m$预测错误的比例, $\ep_m=0.5$对应于随机猜测.如果$\ep_m\geq0.5$,只需把模型$m$的预测结果取反即可.
-    \item 更新样本权重:
-    \[w_n^{(m+1)}=w_n^{(m)}\exp[\alpha_mI(y_m(\vec{x}_n)\neq t_n)]\]
-    即预测正确的样本权重不变,预测错误的样本权重乘以一个大于$1$的因子$\exp(\alpha_m)$.
-\end{enumerate}
-\item 训练完成后,可以用下式对新数据点进行预测:
-\[y_{\text{ada}}(\vec{x})=\sum_{m=1}^{M}\alpha_my_m(\vec{x})\]
-对于二分类问题,通常取符号函数$\text{sgn}(y_{\text{ada}}(\vec{x}))$作为最终预测结果.
-\end{enumerate}
-\subsection{决策树和随机森林}
-\subsubsection{决策树}
-决策树是机器学习中的一种重要模型,主要用于分类问题,但也可以用于回归问题.决策树与人类思考过程有很好的吻合程度,具有优秀的可解释性.\\
-\indent 决策树的主要思想是分治,即将输入$\vec{x}$在空间上划分成一些越来越小的区域,在不同的小区域使用不同的简单模型进行预测.\\
-\indent 通常,决策树的节点通常是基于输入特征的某个阈值进行划分的.例如,对于一个二维输入$(x_1,x_2)$,可以在$x_1$轴上选择一个阈值$x_1^*$,将数据划分为$x_1\leq x_1^*$和$x_1>x_1^*$两部分.然后对每一部分继续选择另一个特征和阈值进行划分,直到满足某个停止条件(如达到最大深度或节点中的样本数过少).\\
-\indent 决策树的训练过程通常使用贪心算法,即在每一步选择当前最优的划分方式.从根节点到叶节点的路径来进行预测.
-\subsubsection{随机森林}
-随机森林是基于决策树的一种集成学习方法,即使用单颗决策树作为弱学习器的bagging方法.
+\section{强化学习与多臂老虎机}
+\subsection{强化学习引言}
+人类是通过与环境互动来学习的,而\tbf{强化学习(Reinforcement Learning, RL)}，就是通过计算来实现从互动中学习.它是一种目标导向的互动学习,\textit{互动性}是它与监督学习的重要区别,而有无明确的目标则是它与无监督学习的主要区别.强化学习需要学习的主要内容,就是怎样做才能使回报最大化.它有两个显著特征:\textit{试错}与\textit{延迟回报}.\\
+\indent 强化学习的主体通常称作\tbf{智能体(Agent)},也通常称作代理.我们将在下一节介绍智能体的数学框架,即感知(Sensation, $S$),行动(Action, $A$)和目标(Goal ,$G$).
+\subsection{多臂老虎机:探索与利用的平衡}
+\subsubsection{多臂老虎机问题的定义}
+有关多臂老虎机的现实背景不再赘述.这里用数学语言描述多臂老虎机问题:\\
+\indent 智能体在每一步都需要从$K$个可能的行动$\{a_k\}_{k=1}^{K}$中选择一个行动,当选择行动$a_k$后将得到回报$R_k$, $R_k$的静态分布$p(R_k)$仅取决于行动$a_k$.智能体应当怎样逐步选择$N$个行动$A_t(t=1,\cdots,N)$使得获得的总回报$\displaystyle\sum_{t=1}^{N}R_t$最大?\\
+\indent 定义行动$a$的价值函数为
+\[q_\ast(a):=\mathbb{E}[R_t|A_t=a]\]
+如果$q_\ast(a)$已知,那么上述问题就很简单,只需在每步选择使得$q_\ast(a)$最大的$a$即可.然而,智能体实际上不能获知$q_\ast(a)$,只能在第$t$步做选择时根据之前的结果计算$q_\ast(a)$的估计值$Q_t(a)$,并据此选择合适的行动.\\
+\indent 如果选择$Q_t(a)$更大的行动,那么主要是利用当前对行动价值函数的了解进行回报最大化,但是容易陷入局部最优中;如果选择其它行动,那么更有利于精确地估计行动价值函数$Q_t(a)$,但是容易损失回报.这两者经常是矛盾的,倾向一者就会远离另一者,这就是多臂老虎机中探索-利用权衡的难题.\\
+\indent 针对上述问题,人们提出了许多算法.
+\subsubsection{多臂老虎机的若干算法}
+多臂老虎机的算法大都基于对行动价值函数的估计,即估计行动$a$的价值$Q_t(a)$并在此基础上采取行动.行动价值函数的一种简单的估计方法是统计此前所有采取$a$行动后得到回报的均值,即
+\[Q_t(a)=\dfrac{\displaystyle\sum_{i=1}^{t-1}R_iI(A_i=a)}{\displaystyle\sum_{i=1}^{t-1}I(A_i=a)}\]
+其中$I$是示性函数.当然,采用贝叶斯方法通过后验概率估计也是可行的.
+\paragraph{贪心算法}
+在智能体采取行动时可以采用\tbf{贪心算法(Greedy Algorithm)},即选取使得$Q_t(a)$取最大值的行动,即
+\[A_t=\arg\max_{a}Q_t(a)\]
+为了防止贪心算法陷入局部最优,可以强制加入探索的成分,典型的是\tbf{$\bs\ep$-贪心算法},即有小概率$\ep$随机选择所有可能的行动,大概率$1-\ep$遵循贪心算法选择回报期望最高的行动.\\
+\indent 然而,在$K$个选择的$\ep$-贪心算法中,在足够长的时间后,尽管$Q_t(a)$已经足够接近$q_\ast(a)$,算法仍然有$\dfrac{K-1}{K}\ep$的概率选择非最优的步骤.这启示我们也许可以在不同的阶段采取不同的策略.
+\paragraph{UCB算法}
+多臂老虎机问题的著名算法,\tbf{置信区间上界算法(Upper Confidence Bound Algorithm, UCB)}在一定程度上解决了上述问题,即随着行动数目$t$的增大而逐步减小探索的概率.\\
+\indent UCB算法分析了$Q_t(a)$估计$q_\ast(a)$的误差.通常,对随机变量$x$进行$n$次测量,结果为$\li X,n$,那么通常把结果写成
+\[x=\bar{X}\pm\dfrac{\sigma}{\sqrt{n}},\quad \bar{X}=\dfrac{1}{n}\sum_{i=1}^{n}X_i,\sigma=\sqrt{\dfrac{1}{n-1}\sum_{i=1}^{n}(X_i-\bar{X})^2}\]
+根据这一分析结果,我们认为$q_\ast(a)$有很大概率落在以下区间(即置信区间)内:
+\[\left[Q_t(a)-\dfrac{\sigma_t(a)}{\sqrt{N_t(a)}},Q_t(a)+\dfrac{\sigma_t(a)}{\sqrt{N_t(a)}}\right]\]
+其中$N_t(a)=\sum_{i=1}^{t-1}I(A_i=a)$是行动$a$被采纳的次数. UCB算法采用了一种面对不确定性时的乐观想法,将上述置信区间的上界作为$q_\ast(a)$的估计,给出如下的行动结果:
+\[A_t=\arg\max_{a}\left[Q_t(a)+c\sigma_t(a)\sqrt{\dfrac{\ln t}{N_t(a)}}\right]\]
+引入因子$\ln t$和常数$c$可以更好地控制误差.通过选择具有最高置信上界的行动$a$,就会倾向于选择那些既有较高期望奖励又较少被探索的行动,从而获得更好的探索-利用平衡效果.
 \end{document}

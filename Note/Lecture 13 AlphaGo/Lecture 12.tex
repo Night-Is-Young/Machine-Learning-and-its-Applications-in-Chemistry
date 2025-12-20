@@ -100,20 +100,5 @@
 \subsubsection{时序差分控制与Q学习}
 在决策优化问题中更重要的是动作价值函数.类似地,我们可以写出$q_\pi(s,a)$的估计$Q(S_t,A_t)$的更新公式:
 \[Q(S_t,A_t)\leftarrow Q(S_t,A_t)+\eta(R_{t+1}+\gamma Q(S_{t+1},A_{t+1})-Q(S_t,A_t))\]
-这里需要使用轨迹数据的五元组$(S_t,A_t,R_{t+1},S_{t+1},A_{t+1})$,因此算法称作\tbf{SARSA算法}.这本质上是一种\textit{同轨策略}.这一算法的具体步骤为:
-\begin{enumerate}[label=\tbf{(\roman*)}]
-    \item 初始化$Q(s,a)$表,并且选定初始状态$S$.
-    \item 根据当前状态$S_t$和当前策略选择行动$A_t$.
-    \item 执行动作$A_t$,获得回报$R_{t+1}$,到达下一个状态$S_{t+1}$.
-    \item 根据状态$S_{t+1}$和当前策略选择行动$A_{t+1}$.
-    \item 使用上述公式
-    \[Q(S_t,A_t)\leftarrow Q(S_t,A_t)+\eta(R_{t+1}+\gamma Q(S_{t+1},A_{t+1})-Q(S_t,A_t))\]
-    更新$Q(S_t,A_t)$.
-    \item 重复上述\tbf{(ii)}到\tbf{(v)}步骤直到终止状态,然后结束当前回合,进入下一回合学习.
-\end{enumerate}
-\indent 当然,也可以使用离轨策略下的时序差分控制.根据贝尔曼最优方程
-\[q_\ast(s,a)=\sum_{s'\in\mathcal{S},r\in\mathcal{R}}p(s',r|s,a)\left(r+\gamma\max_{a'\in\mathcal{A}}q_{\ast}(s',a')\right)\]
-并且根据时序差分预测中的更新公式可得
-\[Q(S_t,A_t)\leftarrow Q(S_t,A_t)+\eta\left[R_{t+1}+\gamma\max_{a\in\mathcal{A}}Q(S_{t+1},a)-Q(S_t,A_t)\right]\]
-这就是\tbf{Q-学习(Q-Learning)}的基本思想.这是一种\textit{离轨策略}:学习的是最优策略(通过$\max$操作实现),而实际模拟轨迹的是探索策略(例如$\ep$-贪心算法).与SARSA相比, Q-学习不需要$A_{t+1}$,而是直接取可能的最大价值,因此能更加稳定地逼近最优的$Q$函数.
+这里需要使用轨迹数据的五元组$(S_t,A_t,R_{t+1},S_{t+1},A_{t+1})$,因此算法称作\tbf{SARSA算法}.这本质上是一种\textit{同轨策略}.
 \end{document}
