@@ -37,6 +37,39 @@
 \[\vec{w}^{\text{t}}\vec{x}=0\]
 这是$\vec{x}$的空间中的一个线性平面.
 \subsubsection{逻辑回归的求解}
-与前面一样,逻辑回归也可以归结为一个概率优化问题,使用极大似然法即可.仍然假定数据集为$\mathcal{D}=\left\{\vec{x}_n,t_n\right\}_{n=1}^{N}$,我们的目标是最大化概率
-\[\max_{\vec{w}}P\left(\right)\]
+与前面一样,逻辑回归也可以归结为一个概率优化问题,使用极大似然法即可.仍然假定数据集为$\mathcal{D}=\left\{\vec{x}_n,t_n\right\}_{n=1}^{N}$.当$t_n=1$时,模型预测结果与$t_n$一致的概率时$y_n=\sigma(\vec{w}^\t\vec{x}_n)$,反之则为$1-y_n$.综合而言,模型预测正确的概率为
+\[p(t_n|\vec{w})=y_n^{t_n}(1-y_n)^{1-t_n}\]
+假定数据点之间是独立的,似然函数可以写成
+\[p(\vec{t}|\vec{w})=\prod_{n=1}^{N}y_n^{t_n}(1-y_n)^{1-t_n}\]
+定义交叉熵误差函数
+\[E(\vec{w})=-\ln p(\vec{t}|\vec{w})=-\sum_{n=1}^{N}\left[t_n\ln y_n+(1-t_n)\ln(1-y_n)\right]\]
+这样做是因为取对数后的函数是凸函数,可以更好地进行求解.为了利用梯度下降法求解$\vec{w}$的最佳值,我们先来推导误差函数的梯度$\nabla_\vec{w}E(\vec{w})$.首先有
+\[\dfrac{\di\sigma(z)}{\di z}=\dfrac{-\e^{-z}}{-(1+\e^{-z})^2}=\sigma(z)[1-\sigma(z)]\]
+于是
+\[\begin{aligned}
+    \nabla_{\vec{w}}E(\vec{w})
+    &=-\sum_{n=1}^{N}\left(\dfrac{t_n}{y_n}-\dfrac{1-t_n}{1-y_n}\right)\dfrac{\di y_n}{\di\vec{w}}\\
+    &=-\sum_{n=1}^{N}\left(\dfrac{t_n}{y_n}-\dfrac{1-t_n}{1-y_n}\right)\dfrac{\di \sigma(\vec{w}^\t\vec{x}_n)}{\di\vec{w}}\\
+    &=-\sum_{n=1}^{N}\left(\dfrac{t_n}{y_n}-\dfrac{1-t_n}{1-y_n}\right)y_n(1-y_n)\vec{x}_n\\
+    &=\sum_{n=1}^{N}(y_n-t_n)\vec{x}_n
+\end{aligned}\]
+这一矢量给出了$E(\vec{w})$随$\vec{w}$增加最快的方向和速度.因此,梯度下降的迭代求解可以写为
+\[\vec{w}^{(\tau+1)}=\vec{w}^{(\tau)}-\eta\nabla_\vec{w}E(\vec{w})\]
+当数据个数太多时,梯度计算公式中的求和将耗费大量时间.考虑到迭代过程本身就是一个逐步逼近最优解的过程,每次的移动方向不一定要很精确,因此可以利用部分数据而非全部数据计算梯度.在极端条件下,每次只利用一个训练数据点,即
+\[\vec{w}^{(\tau+1)}=\vec{w}^{(\tau)}-\eta\nabla_\vec{w}E_n(\vec{w}),\quad E_n(\vec{w})=(y_n-t_n)\vec{x}_n\]
+\subsubsection{基函数和正则化的使用}
+基函数和正则化的使用与在线性回归中是类似的,这里不多赘述.引入基函数可以更好地描述决策面的形状,它在基函数的线性空间中是一个平面,但在样本数据空间中则可以表现地更为复杂.
+\subsubsection{多分类问题}
+处理多分类问题常有以下两种方法.
+\begin{definition}[一对余方法]
+    \tbf{一对余方法(one-versus-the-rest)}的基本想法是每次考虑将样本分为一个类别和其余类别,从而将多分类问题转化为多个二分类问题.
+\end{definition}
+一对余方法适用于分类不互斥的方法.
+\begin{definition}[softmax方法]
+    \tbf{softmax}方法对每个类别$i$定义
+    \[z_i(\vec{x})=\vec{w}^\t_{(i)}\vec{x}\]
+    然后利用如下softmax函数计算$\vec{x}$属于类别$i$的概率
+    \[y^{(i)}(\vec{x})=\dfrac{\e^{z_i}}{\displaystyle\sum_{i}\e^{z_i}}=\dfrac{\e^{\vec{w}_{(i)}^\t\vec{x}}}{\displaystyle\sum_i\e^{\vec{w}_{(i)}^\t\vec{x}}}\]
+\end{definition}
+softmax方法满足各类别概率之和等于$1$的要求,因此特别适用于类别互斥的情形.
 \end{document}
