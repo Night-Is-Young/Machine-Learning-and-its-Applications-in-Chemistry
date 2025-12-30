@@ -30,7 +30,34 @@
 \end{proof}
 直方图方法的优点是简单直观,但缺点也很明显:结果曲线不光滑,并且高维空间下将因维度灾难而效果变差.
 \subsubsection{核密度估计法}
+直方图对$p(\vec{x})=\dfrac{K}{NV}$的处理方法是固定区域$\mathcal{R}$的体积$V$,然后从已知数据中估计$K$.类似地,为了计算某一$\vec{x}$处的概率密度$p(\vec{x})$,我们可以将$\mathcal{R}$选择为中心位于$\vec{x}$,边长为$h$的小立方体,然后定义如下核函数
+\[k\left(\dfrac{\vec{x}-\vec{x}_n}{h}\right)=\left\{\begin{array}{l}
+    1,\quad\text{if}\ \forall 1\leq i\leq D,\left|\dfrac{x_i-x_{n,i}}{h}\right|<\dfrac12\\
+    0,\quad\text{otherwise}
+\end{array}\right.\]
+其中$x_i$是$\vec{x}$的第$i$个分量.则
+\[K=\sum_{n}k\left(\dfrac{\vec{x}-\vec{x}_n}{h}\right)\]
+将其代入概率密度函数的估计公式就有
+\[p(\vec{x})=\dfrac{1}{N}\sum_{n}\dfrac{1}{h^D}k\left(\dfrac{\vec{x}-\vec{x}_n}{h}\right)\]
+这样的方法被称作\tbf{核密度估计法(Kernal Density Estimation)}.\\
+\indent 我们既可以将上式理解为有多少数据点$\vec{x}_n$落到以$\vec{x}$为中心的立方体内,也可以理解为$\vec{x}$落到多少个以$\vec{x}_n$为中心的小立方体里.\\
+\indent 与直方图类似,采用上述核函数给出的$p(\vec{x})$是不光滑的.我们可以用光滑的核函数$k(\vec{x},\vec{x}_n)$,例如高斯核函数,来解决这一问题:
+\[k(\vec{x},\vec{x}_n)=\dfrac{1}{(2\pi h^2)^{D/2}}\exp\left(-\dfrac{\left|\vec{x}-\vec{x}_n\right|^2}{2h^2}\right)\]
+此时估计的$p(\vec{x})$可以写为
+\[p(\vec{x})=\dfrac{1}{N}\sum_{n}k(\vec{x},\vec{x}_n)\]
 \subsubsection{近邻法}
+在数据分布不均匀时,固定体积$V$的做法可能导致性能下降.因此,我们可以采用固定$K$而改变$V$的方法.这就需要用到近邻法.\\
+\indent 尽管近邻法可以用于密度估计,这时属于无监督学习,但更多的时候近邻法被用于分类的监督学习,即\tbf{K-近邻算法(K-Nearest Neighbor, KNN)}.\\
+\indent K-近邻算法的原理基于Bayes公式.记需要预测类别的点为$\vec{x}$,对于$\vec{x}$的$K$个近邻数据点(来自训练集,因此类别已知),属于第$k$类的数目记为$K_k$,则第$k$类在$\vec{x}$处的分布的概率密度为
+\[p(\vec{x}|\mathcal{C}_k)=\dfrac{K_k}{N_kV}\]
+其中$N_k$是训练集中属于第$k$类的数据总数.属于第$k$类的先验概率为
+\[p(\mathcal{C}_k)=\dfrac{N_k}{N}\]
+利用Bayes公式得到后验概率
+\[p(\mathcal{C}_k|\vec{x})=\dfrac{p(\vec{x}|\mathcal{C}_k)p(\mathcal{C}_k)}{p(\vec{x})}=\dfrac{\dfrac{K_k}{N_kV}\cdot\dfrac{N_k}{N}}{\dfrac{K}{NV}}=\dfrac{K_k}{K}\]
+对于此式的直观理解即在$\vec{x}$的$K$个临近的样本中,如果有$K_k$个属于第$k$类,那么$\vec{x}$属于第$k$类的概率自然为$\dfrac{K_k}{K}$.\\
+\indent K-近邻算法只有一个超参数$K$. $K$越大,偏差越大,方差越小.它还可以用于回归,简单的做法是将$\vec{x}$的$K$个近邻的某一属性的平均值(或者使用核函数进行加权)作为对$\vec{x}$的属性的预测.
+\subsubsection{非参数法的优缺点}
+非参数法的最大优点是它不需要假设分布函数的形式,而是通过数据推断分布函数并进行预测,保证了估计的无偏性和一致性.然而,非参数法也需要大量的数据才能保证良好的效果.
 \subsection{核方法的主要思想}
 \subsection{支持向量机}
 支持向量机通过核方法进行非线性分类.它的主要想法是:在所有可能的分类超平面中,选择一个使得\textit{分类间隔最大}的超平面作为最终的分类超平面.
@@ -45,5 +72,37 @@
 \[d(\vec{x})=\dfrac{\vec{w}\cdot\vec{x}}{||\vec{w}||}+\dfrac{b}{||\vec{w}||}=\dfrac{y(\vec{x})}{||w||}\]
 记对象的类别标签为$t_n\in\{-1,1\}$,则对于训练样本$\left\{\vec{x}_n,t_n\right\}_{n=1}^{N}$,我们希望所有样本点都被正确分类,即满足
 \[\dfrac{t_ny(\vec{x})}{||\vec{w}||}>0,\quad n=1,2,\ldots,N\]
-使用基函数也是类似.
+使用基函数也是类似.对于线性可分体系,训练集中的一类数据全部在决策面的一边,而另一类数据全部在决策面的另一边.因此对于训练集中任一数据$\vec{x}_n$,其与决策面的距离可以写成
+\[\dfrac{t_ny(\vec{x})}{||\vec{w}||}=\dfrac{t_n\left[\vec{w}^\t\bs\phi(\vec{x}_n)+b\right]}{||\vec{w}||}\]
+训练集中所有数据点离决策面的最小距离由下式给出:
+\[\dfrac{1}{||\vec{w}||}\min_{n}\{t_n[\vec{w}^\t\bs\phi(\vec{x}_n)+b]\}\]
+支持向量机的目标是使得这一间隔最大化,即
+\[\arg\max_{\vec{w},b}\left\{\dfrac{1}{||\vec{w}||}\min_{n}\{t_n[\vec{w}^\t\bs\phi(\vec{x}_n)+b]\}\right\}\]
+上式既要求最小值又要求最大值,比较复杂,因此要进一步化简.注意到当$\vec{w}$和$b$成比例改变时,距离公式$\dfrac{t_n\left[\vec{w}^\t\bs\phi(\vec{x}_n)+b\right]}{||\vec{w}||}$不会改变,因此不失一般性地总是可以选取$\vec{w},b$使得距离决策面最近的数据点$n$满足$t_n[\vec{w}^\t\bs\phi(\vec{x}_n)+b]=1$,于是对于任何数据点都有
+\[t_n[\vec{w}^\t\bs\phi(\vec{x}_n)+b]\geq1\]
+这被称作决策平面的\tbf{规范表示(Canonical Representation)}.此时目标简化为
+\[\arg\max_{\vec{w},b}\left\{\dfrac{1}{||\vec{w}||}\right\}\]
+或者写成更方便的形式:
+\[\arg\min_{\vec{w},b}\left\{\dfrac{1}{2}||\vec{w}||^2\right\}\]
+这样,支持向量机的目标就是在$t_n[\vec{w}^\t\bs\phi(\vec{x}_n)+b]\geq1$的约束下求解上述最小化问题.这里约束条件是线性的,目标函数是二次函数,因此在数学上属于凸优化问题,具有良好的性质.\\
+\indent 不等式约束条件下的函数极值求解可以利用拉格朗日方法和KKT条件.为每个训练集数据点$\vec{x}_n$的约束条件引入拉格朗日因子$\lambda_n$,定义如下函数
+\[L(\vec{w},b,\lambda)=\dfrac{1}{2}||\vec{w}||^2-\sum_{n}\lambda_n\left\{t_n[\vec{w}^\t\bs\phi(\vec{x}_n)+b]-1\right\}\]
+则上述极值问题的KKT条件给出
+\[\dfrac{\p}{\p(\vec{w},b)}L(\vec{w},b,\lambda)=0,\quad\lambda_n\left\{t_n[\vec{w}^\t\bs\phi(\vec{x}_n)+b]-1\right\}=0\]
+对$\vec{w}$的偏导数得出
+\[\vec{w}=\sum_n\lambda_nt_n\bs\phi(\vec{x}_n)\]
+将它代回$y(\vec{x})=\vec{w}^\t\bs\phi(\vec{x})+b$得到
+\[y(vec{x})=\sum_{n,i}\lambda_nt_n\phi_i(\vec{x}_n)\phi_i(\vec{x})+b=\sum_{n}\lambda_nt_nk(\vec{x},\vec{x}_n)+b\]
+于是模型的结果与核函数$k(\vec{x},\vec{x}_n)=\displaystyle\sum_{i}\phi_i(\vec{x}_n)\phi_i(\vec{x})=\bs\phi^\t(\vec{x}_n)\bs\phi(\vec{x})$有关.可以看到,不处于间隔边缘上的点总有$\lambda_n=0$,也即只有间隔边缘的数据点(被称作\tbf{支持向量})对$y(\vec{x})$的计算有贡献.\\
+\indent 现在计算$b$.间隔边缘$\mathcal{S}$上的数据点$\vec{x}_m$满足$t_my(\vec{x}_m)=1$,根据前面得出的$y(\vec{x})$的表达式可得
+\[t_m\left[\sum_{n\in\mathcal{S}}\lambda_nt_nk(\vec{x}_m,\vec{x}_n)+b\right]=1\]
+于是
+\[b=\dfrac{1}{N_\mathcal{S}}\sum_{m\in\mathcal{S}}\left[t_m-\sum_{n\in\mathcal{S}}\lambda_nt_nk(\vec{x}_m,\vec{x}_n)\right]\]
+其中$N_\mathcal{S}$表示落在间隔边缘上的点的数目.
+\subsubsection{软间隔的使用}
+在线性不可分体系中,严格的边界条件就不再适用了.为此,我们可以引入\tbf{松弛变量(Slack Variables)},记作$\xi_n\geq0$,使得约束条件放宽为
+\[t_ny(\vec{x}_n)\geq1-\xi_n\]
+$\xi_n$可以看作是数据点越过间隔边界的距离,即它造成了某种误差,需要给予相应的惩罚.由此,模型的误差函数可以改写成
+\[E(\vec{w},b,\xi_n;C)=C\sum_{n}\xi_n+\dfrac12||\vec{w}||^2\]
+其中$C$是超参数,用于调整对于越界的惩罚力度.同样可以用拉格朗日方法和KKT条件求解上述问题.
 \end{document}
